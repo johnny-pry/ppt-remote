@@ -1,0 +1,53 @@
+# PPT Remoto
+
+El pastor ve y controla el PowerPoint desde su tablet o laptop, mientras el operador sigue conectado al proyector.
+
+## Instalación
+
+Copiá **solo** `dist\PPTRemoto.exe` a la laptop del PowerPoint (por ejemplo al Escritorio). No hace falta instalar nada más.
+
+La primera vez que lo abrís, Windows pide permiso de administrador: decí **Sí**. Así el programa crea la regla del firewall
+(“PPT Remoto”) que deja entrar a las tablets. No vuelve a preguntar, salvo que muevas el .exe a otra carpeta.
+
+## Uso (domingo)
+
+1. Abrí la presentación en PowerPoint.
+2. Abrí `PPTRemoto.exe`. No aparece ninguna ventana negra: se abre el **panel del operador** en el navegador
+   y queda un ícono azul junto al reloj de Windows (clic derecho → abrir el panel, ver el PIN o **Salir**).
+3. El pastor escanea el QR del panel con la tablet (ya incluye el PIN). Desde una laptop escribe la dirección y el PIN.
+4. El operador inicia la presentación como siempre (o con el botón “Iniciar presentación”).
+
+El pastor ve lo que está en pantalla y lo que viene, **incluidas las animaciones** (por ejemplo, cada viñeta que aparece),
+sus notas, un reloj y un cronómetro. Puede pasar con los botones, deslizando el dedo, con el teclado o con un presentador
+(clicker), saltar a cualquier diapositiva, poner la pantalla en negro y ver la página en pantalla completa (botón abajo a la derecha).
+
+El operador puede **desactivar el control del pastor** en cualquier momento; el pastor sigue viendo.
+
+## Mensajes
+
+El operador puede escribirle al pastor desde el panel (o usar los mensajes rápidos). En la tablet aparece un aviso grande
+con respuestas rápidas (👍 Ok, Sí, No, Un momento) o para escribir. El operador ve “visto ✓” cuando el pastor lo leyó.
+No hay sonidos a propósito: el audio de la laptop suele ir a los parlantes del templo.
+Los mensajes se borran al cerrar PPT Remoto.
+
+## Bueno saber
+
+- La tablet y la laptop tienen que estar en la misma red Wi-Fi.
+- En la tablet, alargá el tiempo de apagado de pantalla.
+- Las vistas de animación se preparan en segundo plano unos segundos después de abrir la presentación.
+  Se muestran las animaciones de entrada y salida; las de énfasis o movimiento no cambian la vista previa.
+- Si editás diapositivas con la presentación abierta, tocá “Actualizar vistas previas” en el panel.
+- Registro de errores: `%LOCALAPPDATA%\PPTRemoto\registro.txt`.
+
+## Opciones (variables de entorno)
+
+- `PPT_REMOTO_PIN=1234` fija el PIN (si no, cambia cada vez que se abre el programa).
+- `PPT_REMOTO_PUERTO=8000` cambia el puerto.
+
+## Desarrollo
+
+```
+pip install -r requirements.txt
+python ppt_remote.py
+construir.bat        → dist\PPTRemoto.exe
+```

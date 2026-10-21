@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+pywin32
+segno
+pystray
+pillow

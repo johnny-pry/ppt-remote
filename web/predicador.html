@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>PPT Remoto</title>
+<style>
+  :root {
+    --fondo: #111317; --panel: #1b1e24; --borde: #2b2f37; --texto: #eef0f3; --tenue: #9aa2ae;
+    --acento: #4f8cff; --vivo: #22c55e; --alerta: #f59e0b; --peligro: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--fondo); color: var(--texto);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { display: grid; grid-template-rows: auto 1fr auto; height: 100dvh; overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; touch-action: manipulation; }
+
+  header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--borde); }
+  #nombre { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pastilla { padding: 4px 10px; border-radius: 999px; font-size: 14px; font-weight: 600; background: var(--borde); white-space: nowrap; }
+  .pastilla.vivo { background: var(--vivo); color: #04210f; }
+  .pastilla.alerta { background: var(--alerta); color: #2a1a00; }
+  .pastilla.peligro { background: var(--peligro); }
+  #reloj, #cronometro { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
+  #cronometro { background: var(--panel); padding: 4px 10px; border-radius: 8px; }
+
+  main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; padding: 16px; min-height: 0; }
+  .columna { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+  .etiqueta { color: var(--tenue); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: space-between; gap: 8px; }
+  .marco { flex-shrink: 0; position: relative; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid var(--borde); aspect-ratio: var(--proporcion, 16/9); }
+  .marco img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .marco .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tenue); text-align: center; padding: 16px; }
+  #actual-marco { outline: 3px solid transparent; }
+  #actual-marco.vivo { outline-color: var(--vivo); }
+  #actual-marco.negro img { opacity: .25; }
+  .insignia { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.75); padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 14px; }
+  #notas { flex: 1; min-height: 80px; overflow-y: auto; background: var(--panel); border-radius: 10px; padding: 14px 16px;
+    font-size: var(--tam-notas, 20px); white-space: pre-wrap; }
+  #notas.vacias { color: var(--tenue); font-style: italic; }
+  .fila-notas { display: flex; gap: 6px; }
+  .fila-notas button { background: var(--panel); border-radius: 6px; padding: 2px 10px; }
+
+  footer { display: grid; grid-template-columns: 1fr auto auto 2fr auto; gap: 12px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--borde); }
+  .boton { border-radius: 12px; padding: 18px 20px; font-size: 20px; font-weight: 700; background: var(--panel); border: 1px solid var(--borde); }
+  .boton:active { transform: scale(.98); }
+  .boton.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+  .boton:disabled { opacity: .35; cursor: default; }
+  .boton.icono { padding: 0 18px; display: grid; place-items: center; }
+  .boton.icono svg { width: 26px; height: 26px; }
+  #aviso { grid-column: 1 / -1; text-align: center; color: var(--alerta); font-weight: 600; display: none; }
+
+  #grilla { position: fixed; inset: 0; background: rgba(10,11,14,.97); display: none; flex-direction: column; z-index: 10; }
+  #grilla.abierta { display: flex; }
+  #grilla header { justify-content: space-between; }
+  #miniaturas { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; align-content: start; }
+  .mini { background: none; padding: 0; text-align: left; }
+  .mini .marco { border-width: 2px; }
+  .mini.actual .marco { border-color: var(--vivo); }
+  .mini.oculta { opacity: .45; }
+  .mini span { display: block; color: var(--tenue); font-size: 14px; margin-top: 4px; }
+
+  #pin-panel { position: fixed; inset: 0; background: var(--fondo); display: none; place-items: center; z-index: 20; }
+  #pin-panel.abierto { display: grid; }
+  #pin-panel form { display: grid; gap: 14px; width: min(340px, 90vw); text-align: center; }
+  #pin-panel input { font-size: 36px; text-align: center; letter-spacing: .3em; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--borde); background: var(--panel); color: var(--texto); }
+  #pin-panel form { margin: auto; }
+  #pin-panel input.error { border-color: var(--peligro); }
+  #pin-panel input::placeholder { color: var(--tenue); letter-spacing: .1em; }
+
+  #b-chat { position: relative; background: var(--panel); border-radius: 8px; padding: 4px 12px; font-size: 20px; }
+  #b-chat .contador { position: absolute; top: -6px; right: -6px; background: var(--peligro); color: #fff; font-size: 12px;
+    font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: grid; place-items: center; padding: 0 5px; }
+
+  #mensaje-nuevo { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); width: min(720px, calc(100vw - 32px));
+    background: #2a2210; border: 2px solid var(--alerta); border-radius: 14px; padding: 16px 18px; z-index: 15;
+    box-shadow: 0 12px 40px rgba(0,0,0,.6); display: grid; gap: 12px; }
+  #mensaje-nuevo .texto { font-size: 26px; font-weight: 700; white-space: pre-wrap; }
+  #mensaje-nuevo .de { color: var(--alerta); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+  .respuestas { display: flex; flex-wrap: wrap; gap: 8px; }
+  .respuestas button { background: var(--panel); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 16px; font-size: 18px; font-weight: 600; }
+  .respuestas button.cerrar { margin-left: auto; background: var(--peligro); border-color: var(--peligro); color: #fff; padding: 10px 20px; }
+
+  #chat { position: fixed; inset: 0; background: rgba(10,11,14,.97); display: none; flex-direction: column; z-index: 16; }
+  #chat.abierto { display: flex; }
+  #chat header { justify-content: space-between; }
+  #chat-lista, #chat .pie { width: min(760px, 100%); margin: 0 auto; }
+  #chat-lista { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .burbuja { max-width: 80%; padding: 10px 14px; border-radius: 14px; background: var(--panel); font-size: 19px; white-space: pre-wrap; }
+  .burbuja.mio { align-self: flex-end; background: var(--acento); color: #fff; }
+  .burbuja small { display: block; opacity: .7; font-size: 12px; margin-top: 2px; }
+  #chat .pie { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+  #chat form { display: flex; gap: 10px; }
+  #chat input { flex: 1; min-width: 0; font: inherit; font-size: 18px; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--borde); background: var(--panel); color: var(--texto); }
+
+  @media (orientation: portrait), (max-width: 760px) {
+    main { display: flex; flex-direction: column; overflow-y: auto; }
+    .columna { display: contents; }
+    #siguiente-bloque { width: 55%; }
+    #notas { flex: 1 0 160px; }
+    footer { grid-template-columns: 1fr 1fr 1fr auto; }
+    #b-siguiente { grid-column: 1 / -1; order: -1; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <span id="nombre">Conectando…</span>
+  <span id="estado" class="pastilla">—</span>
+  <span id="cronometro" title="Tocar para reiniciar">00:00</span>
+  <span id="reloj">--:--</span>
+  <button id="b-chat" aria-label="Mensajes" title="Mensajes">💬<span class="contador" id="chat-contador" hidden></span></button>
+</header>
+
+<main>
+  <section class="columna">
+    <div class="etiqueta"><span>En pantalla</span><span id="pos-actual"></span></div>
+    <div class="marco" id="actual-marco">
+      <img id="actual-img" alt="">
+      <div class="vacio" id="actual-vacio">Esperando a PowerPoint…</div>
+      <span class="insignia" id="insignia" hidden></span>
+    </div>
+  </section>
+  <section class="columna">
+    <div id="siguiente-bloque">
+      <div>
+        <div class="etiqueta"><span>Siguiente</span><span id="pos-siguiente"></span></div>
+        <div class="marco" id="siguiente-marco">
+          <img id="siguiente-img" alt="">
+          <div class="vacio" id="siguiente-vacio">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="etiqueta">
+      <span>Notas</span>
+      <span class="fila-notas"><button id="notas-menos" aria-label="Letra más chica">A−</button><button id="notas-mas" aria-label="Letra más grande">A+</button></span>
+    </div>
+    <div id="notas" class="vacias">Sin notas.</div>
+  </section>
+</main>
+
+<footer>
+  <div id="aviso"></div>
+  <button class="boton" id="b-anterior">◀ Anterior</button>
+  <button class="boton" id="b-negro" title="Pantalla en negro">Negro</button>
+  <button class="boton" id="b-grilla">Diapositivas</button>
+  <button class="boton primario" id="b-siguiente">Siguiente ▶</button>
+  <button class="boton icono" id="b-pantalla" aria-label="Pantalla completa" title="Pantalla completa"></button>
+</footer>
+
+<div id="grilla">
+  <header><strong>Ir a una diapositiva</strong><button class="boton" id="b-cerrar">Cerrar</button></header>
+  <div id="miniaturas"></div>
+</div>
+
+<div id="mensaje-nuevo" hidden>
+  <div class="de">Mensaje del operador</div>
+  <div class="texto" id="mensaje-texto"></div>
+  <div class="respuestas" id="respuestas-banner"></div>
+</div>
+
+<div id="chat">
+  <header><strong>Mensajes</strong><button class="boton" id="b-chat-cerrar">Cerrar</button></header>
+  <div id="chat-lista"></div>
+  <div class="pie">
+    <div class="respuestas" id="respuestas-chat"></div>
+    <form id="chat-form"><input id="chat-input" maxlength="300" autocomplete="off" placeholder="Mensaje"><button class="boton primario" type="submit">Enviar</button></form>
+  </div>
+</div>
+
+<div id="pin-panel">
+  <form id="pin-form">
+    <input id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="PIN" aria-label="PIN" required>
+    <button class="boton primario" type="submit">Entrar</button>
+  </form>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const leer = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+
+// El PIN puede venir en el enlace del código QR; se guarda para no pedirlo de nuevo.
+const params = new URLSearchParams(location.search);
+if (params.get("pin")) { guardar("pin", params.get("pin")); history.replaceState(null, "", location.pathname); }
+let pin = leer("pin") || "";
+
+let ws, estado = null, reintento = 0;
+let inicioPredica = Number(leer("inicioPredica")) || 0;
+
+function conectar() {
+  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?pin=${encodeURIComponent(pin)}`);
+  ws.onopen = () => { reintento = 0; };
+  ws.onmessage = (e) => { estado = JSON.parse(e.data); pintar(); };
+  ws.onclose = () => {
+    estado = null; pintar();
+    setTimeout(conectar, Math.min(5000, 500 * 2 ** reintento++));
+  };
+}
+
+function enviarChat(orden, extra = {}) {
+  if (ws && ws.readyState === 1 && estado?.pin_ok) ws.send(JSON.stringify({ orden, ...extra }));
+}
+
+function enviar(orden, extra = {}) {
+  if (ws && ws.readyState === 1 && estado?.puede_controlar) ws.send(JSON.stringify({ orden, ...extra }));
+}
+
+function urlDiapo(deck, n) { return n && n <= deck.listas ? `/diapos/${deck.id}/${n}.png` : null; }
+
+// La diapositiva n tal como se ve después de `paso` clics (si ya está lista; si no, la diapositiva completa)
+function urlPaso(deck, n, paso) {
+  const clics = deck.pasos[String(n)];
+  return clics !== undefined ? `/diapos/${deck.id}/${n}_${Math.min(paso, clics)}.png` : urlDiapo(deck, n);
+}
+
+function ponerImagen(img, vacio, url, textoVacio) {
+  if (url) { if (img.getAttribute("src") !== url) img.src = url; img.hidden = false; vacio.hidden = true; }
+  else { img.hidden = true; img.removeAttribute("src"); vacio.hidden = false; vacio.textContent = textoVacio; }
+}
+
+function siguienteVisible(deck, desde) {
+  for (let n = desde + 1; n <= deck.diapos.length; n++) if (!deck.diapos[n - 1].oculta) return n;
+  return null;
+}
+
+let ultimoDeckGrilla = null;
+
+function pintar() {
+  const e = estado, deck = e?.deck;
+  document.documentElement.style.setProperty("--proporcion", deck ? deck.proporcion : 16 / 9);
+
+  // Encabezado
+  $("nombre").textContent = !e ? "Sin conexión con la laptop…" : deck ? deck.nombre : "PowerPoint sin presentación abierta";
+  const pastilla = $("estado");
+  if (!e) { pastilla.textContent = "Reconectando"; pastilla.className = "pastilla peligro"; }
+  else if (!e.conectado) { pastilla.textContent = "PowerPoint cerrado"; pastilla.className = "pastilla peligro"; }
+  else if (e.presentando && e.negro) { pastilla.textContent = "Pantalla en negro"; pastilla.className = "pastilla alerta"; }
+  else if (e.presentando) { pastilla.textContent = "En vivo"; pastilla.className = "pastilla vivo"; }
+  else { pastilla.textContent = "No está presentando"; pastilla.className = "pastilla"; }
+
+  // Arranca el cronómetro la primera vez que la presentación sale en vivo (o si quedó de otro culto)
+  if (e?.presentando && (!inicioPredica || Date.now() - inicioPredica > 6 * 3600 * 1000)) { inicioPredica = Date.now(); guardar("inicioPredica", inicioPredica); }
+
+  // Diapositiva actual (antes de presentar se muestra la primera)
+  const total = deck ? deck.diapos.length : 0;
+  const actual = deck ? (e.presentando ? e.diapo : 1) : null;
+  const marco = $("actual-marco");
+  marco.classList.toggle("vivo", !!e?.presentando && !e.negro);
+  marco.classList.toggle("negro", !!e?.negro);
+  let textoActual = !e ? "Sin conexión" : !e.conectado ? "Abrí PowerPoint en la laptop" : !deck ? "No hay presentación abierta"
+    : e.fin ? "Fin de la presentación" : "Preparando diapositivas…";
+  const paso = e?.presentando ? e.paso : 0;
+  ponerImagen($("actual-img"), $("actual-vacio"), deck && !e.fin ? urlPaso(deck, actual, paso) : null, textoActual);
+  $("pos-actual").textContent = actual && !e.fin ? `${actual} de ${total}` : "";
+
+  const insignia = $("insignia");
+  if (e?.negro) { insignia.hidden = false; insignia.textContent = "EN NEGRO"; }
+  else if (e?.presentando && e.pasos > 0) { insignia.hidden = false; insignia.textContent = `Animación ${e.paso} de ${e.pasos}`; }
+  else insignia.hidden = true;
+
+  // Lo siguiente: el próximo clic de animación, o la próxima diapositiva (saltando las ocultas)
+  const clicsActual = deck && actual ? (deck.pasos[String(actual)] ?? (e.presentando ? e.pasos : 0)) : 0;
+  const quedaAnimacion = !!deck && !!actual && !e.fin && paso < clicsActual;
+  const sig = deck && actual && !e.fin && !quedaAnimacion ? siguienteVisible(deck, actual) : null;
+  let urlSig = null, textoSig = "";
+  if (quedaAnimacion) {
+    urlSig = urlPaso(deck, actual, paso + 1);
+    textoSig = `Animación ${paso + 1} de ${clicsActual}`;
+  } else if (sig) {
+    urlSig = urlPaso(deck, sig, 0);
+    textoSig = `Diapositiva ${sig}`;
+  }
+  ponerImagen($("siguiente-img"), $("siguiente-vacio"), urlSig, deck && actual && !e.fin ? "Última diapositiva" : "—");
+  $("pos-siguiente").textContent = textoSig;
+
+  // Notas
+  const notas = deck && actual && !e.fin ? deck.diapos[actual - 1]?.notas : "";
+  const caja = $("notas");
+  caja.textContent = notas || "Sin notas.";
+  caja.classList.toggle("vacias", !notas);
+
+  // Botones y avisos
+  const puede = !!e?.puede_controlar, enVivo = !!e?.presentando;
+  ["b-anterior", "b-siguiente", "b-negro"].forEach((id) => $(id).disabled = !puede || !enVivo);
+  $("b-negro").textContent = e?.negro ? "Mostrar" : "Negro";
+  $("b-grilla").disabled = !deck;
+  const aviso = $("aviso");
+  let texto = "";
+  if (e && !e.pin_ok) texto = "";
+  else if (e && !e.control_remoto) texto = "El operador desactivó el control remoto. Podés seguir viendo.";
+  else if (e && e.conectado && deck && !enVivo) texto = "El operador todavía no inició la presentación.";
+  aviso.textContent = texto; aviso.style.display = texto ? "block" : "none";
+
+  // Pedir PIN si no es válido
+  $("pin-panel").classList.toggle("abierto", !!e && !e.pin_ok);
+  $("pin-input").classList.toggle("error", !!e && !e.pin_ok && !!pin);
+
+  pintarGrilla(deck, actual);
+  pintarChat();
+}
+
+// --- Mensajes con el operador ---
+const RESPUESTAS = ["👍 Ok", "Sí", "No", "Un momento"];
+let ultimoChat = "";
+
+function pintarChat() {
+  const lista = estado?.mensajes ?? [];
+  const sinVer = lista.filter((m) => m.de === "operador" && !m.visto);
+  const chatAbierto = $("chat").classList.contains("abierto");
+  if (chatAbierto && sinVer.length) enviarChat("visto");
+
+  const contador = $("chat-contador");
+  contador.hidden = !sinVer.length; contador.textContent = sinVer.length;
+
+  // Aviso grande con el último mensaje sin ver
+  const banner = $("mensaje-nuevo");
+  banner.hidden = !sinVer.length || chatAbierto;
+  if (sinVer.length) $("mensaje-texto").textContent = sinVer.map((m) => m.texto).join("\n");
+
+  const clave = JSON.stringify(lista);
+  if (clave === ultimoChat) return;
+  ultimoChat = clave;
+  const cont = $("chat-lista");
+  cont.innerHTML = "";
+  for (const m of lista) {
+    const b = document.createElement("div");
+    b.className = "burbuja" + (m.de === "pastor" ? " mio" : "");
+    b.textContent = m.texto;
+    const pie = document.createElement("small");
+    pie.textContent = m.hora + (m.de === "pastor" && m.visto ? " · visto" : "");
+    b.appendChild(pie);
+    cont.appendChild(b);
+  }
+  if (!lista.length) cont.innerHTML = '<p style="color:var(--tenue);text-align:center">Sin mensajes.</p>';
+  cont.scrollTop = cont.scrollHeight;
+}
+
+function responder(texto) { enviarChat("mensaje", { texto }); enviarChat("visto"); }
+
+for (const id of ["respuestas-banner", "respuestas-chat"]) {
+  for (const r of RESPUESTAS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = r; b.onclick = () => responder(r);
+    $(id).appendChild(b);
+  }
+}
+const bEscribir = document.createElement("button");
+bEscribir.textContent = "Escribir…"; bEscribir.onclick = () => abrirChat(true);
+const bCerrarAviso = document.createElement("button");
+bCerrarAviso.textContent = "✕"; bCerrarAviso.className = "cerrar"; bCerrarAviso.setAttribute("aria-label", "Cerrar"); bCerrarAviso.onclick = () => enviarChat("visto");
+$("respuestas-banner").append(bEscribir, bCerrarAviso);
+
+function abrirChat(escribir = false) {
+  $("chat").classList.add("abierto");
+  enviarChat("visto");
+  pintarChat();
+  $("chat-lista").scrollTop = $("chat-lista").scrollHeight;
+  if (escribir) $("chat-input").focus();
+}
+$("b-chat").onclick = () => abrirChat();
+$("b-chat-cerrar").onclick = () => { $("chat").classList.remove("abierto"); pintarChat(); };
+$("chat-form").onsubmit = (ev) => {
+  ev.preventDefault();
+  const texto = $("chat-input").value.trim();
+  if (texto) { responder(texto); $("chat-input").value = ""; }
+};
+
+function pintarGrilla(deck, actual) {
+  const cont = $("miniaturas");
+  if (!deck) { cont.innerHTML = ""; ultimoDeckGrilla = null; return; }
+  const clave = `${deck.id}:${deck.listas}`;
+  if (clave !== ultimoDeckGrilla) {
+    ultimoDeckGrilla = clave;
+    cont.innerHTML = "";
+    for (const d of deck.diapos) {
+      const b = document.createElement("button");
+      b.className = "mini" + (d.oculta ? " oculta" : "");
+      b.dataset.n = d.n;
+      const url = urlDiapo(deck, d.n);
+      b.innerHTML = `<div class="marco">${url ? `<img loading="lazy" src="${url}" alt="">` : `<div class="vacio">…</div>`}</div>
+        <span>${d.n}${d.oculta ? " · oculta" : ""}</span>`;
+      b.onclick = () => { if (estado?.puede_controlar && estado.presentando) { enviar("ir", { n: d.n }); cerrarGrilla(); } };
+      cont.appendChild(b);
+    }
+  }
+  for (const b of cont.children) b.classList.toggle("actual", Number(b.dataset.n) === actual);
+}
+
+function abrirGrilla() {
+  $("grilla").classList.add("abierta");
+  $("miniaturas").querySelector(".actual")?.scrollIntoView({ block: "center" });
+}
+function cerrarGrilla() { $("grilla").classList.remove("abierta"); }
+
+// Pantalla completa (oculta pestañas y barra del navegador)
+const raiz = document.documentElement;
+const pedirPantalla = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+const salirPantalla = document.exitFullscreen || document.webkitExitFullscreen;
+const enPantallaCompleta = () => document.fullscreenElement || document.webkitFullscreenElement;
+const ICONO_ABRIR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const ICONO_CERRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+function pintarBotonPantalla() { $("b-pantalla").innerHTML = enPantallaCompleta() ? ICONO_CERRAR : ICONO_ABRIR; }
+if (!pedirPantalla) $("b-pantalla").hidden = true;
+$("b-pantalla").onclick = () => enPantallaCompleta() ? salirPantalla.call(document) : pedirPantalla.call(raiz);
+document.addEventListener("fullscreenchange", pintarBotonPantalla);
+document.addEventListener("webkitfullscreenchange", pintarBotonPantalla);
+pintarBotonPantalla();
+
+// Botones
+$("b-siguiente").onclick = () => enviar("siguiente");
+$("b-anterior").onclick = () => enviar("anterior");
+$("b-negro").onclick = () => enviar("negro");
+$("b-grilla").onclick = abrirGrilla;
+$("b-cerrar").onclick = cerrarGrilla;
+
+// Teclado (laptops y presentadores/clickers conectados a la laptop del pastor)
+document.addEventListener("keydown", (ev) => {
+  if (ev.target.tagName === "INPUT") return;
+  if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(ev.key)) { enviar("siguiente"); ev.preventDefault(); }
+  else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(ev.key)) { enviar("anterior"); ev.preventDefault(); }
+  else if (ev.key === "b" || ev.key === "B" || ev.key === ".") enviar("negro");
+  else if (ev.key === "Escape") { cerrarGrilla(); $("chat").classList.remove("abierto"); pintarChat(); }
+});
+
+// Deslizar el dedo sobre la diapositiva actual
+let toqueX = null;
+$("actual-marco").addEventListener("touchstart", (ev) => { toqueX = ev.touches[0].clientX; }, { passive: true });
+$("actual-marco").addEventListener("touchend", (ev) => {
+  if (toqueX === null) return;
+  const dx = ev.changedTouches[0].clientX - toqueX; toqueX = null;
+  if (Math.abs(dx) > 60) enviar(dx < 0 ? "siguiente" : "anterior");
+});
+
+// Tamaño de letra de las notas
+let tamNotas = Number(leer("tamNotas")) || 20;
+const aplicarTam = () => { document.documentElement.style.setProperty("--tam-notas", tamNotas + "px"); guardar("tamNotas", tamNotas); };
+$("notas-mas").onclick = () => { tamNotas = Math.min(48, tamNotas + 2); aplicarTam(); };
+$("notas-menos").onclick = () => { tamNotas = Math.max(12, tamNotas - 2); aplicarTam(); };
+aplicarTam();
+
+// PIN
+$("pin-form").onsubmit = (ev) => {
+  ev.preventDefault();
+  pin = $("pin-input").value.trim(); guardar("pin", pin);
+  ws.onclose = null; ws.close(); conectar();
+};
+
+// Reloj y cronómetro
+const dosDigitos = (n) => String(n).padStart(2, "0");
+function tic() {
+  const ahora = new Date();
+  $("reloj").textContent = `${dosDigitos(ahora.getHours())}:${dosDigitos(ahora.getMinutes())}`;
+  const seg = inicioPredica ? Math.floor((Date.now() - inicioPredica) / 1000) : 0;
+  const h = Math.floor(seg / 3600), m = Math.floor(seg / 60) % 60, s = seg % 60;
+  $("cronometro").textContent = h ? `${h}:${dosDigitos(m)}:${dosDigitos(s)}` : `${dosDigitos(m)}:${dosDigitos(s)}`;
+}
+$("cronometro").onclick = () => { inicioPredica = Date.now(); guardar("inicioPredica", inicioPredica); tic(); };
+setInterval(tic, 1000); tic();
+
+conectar();
+</script>
+</body>
+</html>
