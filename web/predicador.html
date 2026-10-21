@@ -33,7 +33,9 @@
   .marco { flex-shrink: 0; position: relative; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid var(--borde); aspect-ratio: var(--proporcion, 16/9); }
   .marco img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .marco .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tenue); text-align: center; padding: 16px; }
-  #actual-marco { outline: 3px solid transparent; }
+  /* La diapositiva actual entra siempre en el espacio libre: la limita el ancho o el alto, lo que se acabe primero */
+  .encaje { flex: 1; min-height: 0; container-type: size; }
+  #actual-marco { outline: 3px solid transparent; width: min(100cqw, calc(100cqh * var(--proporcion, 1.7778))); margin: 0 auto; }
   #actual-marco.vivo { outline-color: var(--vivo); }
   #actual-marco.negro img { opacity: .25; }
   .insignia { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.75); padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 14px; }
@@ -100,6 +102,8 @@
   @media (orientation: portrait), (max-width: 760px) {
     main { display: flex; flex-direction: column; overflow-y: auto; }
     .columna { display: contents; }
+    .encaje { flex: none; container-type: normal; }
+    #actual-marco { width: 100%; }
     #siguiente-bloque { width: 55%; }
     #notas { flex: 1 0 160px; }
     footer { grid-template-columns: 1fr 1fr 1fr auto; }
@@ -119,10 +123,12 @@
 <main>
   <section class="columna">
     <div class="etiqueta"><span>En pantalla</span><span id="pos-actual"></span></div>
-    <div class="marco" id="actual-marco">
-      <img id="actual-img" alt="">
-      <div class="vacio" id="actual-vacio">Esperando a PowerPoint…</div>
-      <span class="insignia" id="insignia" hidden></span>
+    <div class="encaje">
+      <div class="marco" id="actual-marco">
+        <img id="actual-img" alt="">
+        <div class="vacio" id="actual-vacio">Esperando a PowerPoint…</div>
+        <span class="insignia" id="insignia" hidden></span>
+      </div>
     </div>
   </section>
   <section class="columna">
