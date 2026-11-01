@@ -2,9 +2,14 @@
 
 El pastor ve y controla el PowerPoint desde su tablet o laptop, mientras el operador sigue conectado al proyector.
 
+Funciona en Windows con Microsoft PowerPoint instalado.
+
 ## Instalación
 
-Copiá **solo** `dist\PPTRemoto.exe` a la laptop del PowerPoint (por ejemplo al Escritorio). No hace falta instalar nada más.
+Descargá `PPTRemoto.exe` de la última versión en [Releases](../../releases/latest) y copialo a la laptop del PowerPoint
+(por ejemplo al Escritorio). No hace falta instalar nada más.
+
+Como el programa no está firmado, Windows puede mostrar “Windows protegió su PC”: tocá **Más información** → **Ejecutar de todas formas**.
 
 La primera vez que lo abrís, Windows pide permiso de administrador: decí **Sí**. Así el programa crea la regla del firewall
 (“PPT Remoto”) que deja entrar a las tablets. No vuelve a preguntar, salvo que muevas el .exe a otra carpeta.
@@ -51,3 +56,14 @@ pip install -r requirements.txt
 python ppt_remote.py
 construir.bat        → dist\PPTRemoto.exe
 ```
+
+Cada push a GitHub construye `PPTRemoto.exe` en Actions. Para publicar una versión nueva en Releases:
+
+```
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+## Licencia
+
+[MIT](LICENSE)
