@@ -1,0 +1,21 @@
+name: Construir PPTRemoto.exe
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  construir:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Construir
+        shell: cmd
+        run: construir.bat
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PPTRemoto
+          path: dist/PPTRemoto.exe
