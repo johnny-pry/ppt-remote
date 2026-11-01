@@ -1,57 +1,59 @@
 # PPT Remoto
 
-Seguí y controlá una presentación de PowerPoint desde cualquier tablet, celular o laptop de la red, con una página web.
-Pensado para que quien presenta vea lo que viene y pase las diapositivas desde donde está, mientras el operador
-sigue en la computadora conectada al proyector.
+**English** | [Español](README.es.md)
 
-Funciona en Windows con Microsoft PowerPoint instalado.
+Follow and control a PowerPoint presentation from any tablet, phone or laptop on your network, through a web page.
+Built so the presenter can see what's coming and change slides from wherever they are, while an operator stays
+at the computer connected to the projector.
 
-## Instalación
+Runs on Windows with Microsoft PowerPoint installed. **The interface is in Spanish.**
 
-Descargá `PPTRemoto.exe` de la última versión en [Releases](../../releases/latest) y copialo a la laptop del PowerPoint
-(por ejemplo al Escritorio). No hace falta instalar nada más.
+## Installation
 
-Como el programa no está firmado, Windows puede mostrar “Windows protegió su PC”: tocá **Más información** → **Ejecutar de todas formas**.
+Download [`PPTRemoto.exe`](../../releases/latest/download/PPTRemoto.exe) (latest version, see [Releases](../../releases/latest))
+and copy it to the PowerPoint computer (for example to the Desktop). Nothing else to install.
 
-La primera vez que lo abrís, Windows pide permiso de administrador: decí **Sí**. Así el programa crea la regla del firewall
-(“PPT Remoto”) que deja entrar a los otros dispositivos. No vuelve a preguntar, salvo que muevas el .exe a otra carpeta.
+The program isn't signed, so Windows may show “Windows protected your PC”: click **More info** → **Run anyway**.
 
-## Uso
+The first time you open it, Windows asks for administrator permission: say **Yes**. This lets the program create a firewall
+rule (“PPT Remoto”) so other devices can connect. It won't ask again unless you move the .exe to another folder.
 
-1. Abrí la presentación en PowerPoint.
-2. Abrí `PPTRemoto.exe`. No aparece ninguna ventana negra: se abre el **panel del operador** en el navegador
-   y queda un ícono azul junto al reloj de Windows (clic derecho → abrir el panel, ver el PIN o **Salir**).
-3. Quien presenta escanea el QR del panel con la tablet o el celular (ya incluye el PIN). Desde una laptop escribe la dirección y el PIN.
-4. El operador inicia la presentación como siempre (o con el botón “Iniciar presentación”).
+## Usage
 
-Quien presenta ve lo que está en pantalla y lo que viene, **incluidas las animaciones** (por ejemplo, cada viñeta que aparece),
-sus notas, un reloj y un cronómetro. Puede pasar con los botones, deslizando el dedo, con el teclado o con un control remoto
-(clicker), saltar a cualquier diapositiva, poner la pantalla en negro y ver la página en pantalla completa (botón abajo a la derecha).
+1. Open the presentation in PowerPoint.
+2. Open `PPTRemoto.exe`. No console window appears: the **operator panel** opens in the browser,
+   and a blue icon sits next to the Windows clock (right-click → open the panel, see the PIN, or **Salir** to quit).
+3. The presenter scans the QR code in the panel with a tablet or phone (the PIN is included). From a laptop, type the address and PIN.
+4. The operator starts the slideshow as usual (or with the “Iniciar presentación” button).
 
-El operador puede **desactivar el control remoto** en cualquier momento; quien presenta sigue viendo.
+The presenter sees the current and next slide, **including animations** (for example, each bullet as it appears),
+their notes, a clock and a stopwatch. They can change slides with the buttons, by swiping, with the keyboard or a remote
+clicker, jump to any slide, black out the screen, and go full screen (button at the bottom right).
 
-## Mensajes
+The operator can **turn off remote control** at any time; the presenter can still see everything.
 
-El operador puede escribirle a quien presenta desde el panel (o usar los mensajes rápidos). En la tablet aparece un aviso grande
-con respuestas rápidas (👍 Ok, Sí, No, Un momento) o para escribir. El operador ve “visto ✓” cuando el mensaje fue leído.
-No hay sonidos a propósito: el audio de la computadora suele ir a los parlantes de la sala.
-Los mensajes se borran al cerrar PPT Remoto.
+## Messages
 
-## Bueno saber
+The operator can write to the presenter from the panel (or use quick messages). The tablet shows a large alert
+with quick replies (👍 Ok, Sí, No, Un momento) or a box to type an answer. The operator sees “visto ✓” once the message has been read.
+There are no sounds on purpose: the computer's audio usually goes to the room speakers.
+Messages are cleared when PPT Remoto closes.
 
-- Los dispositivos y la computadora del PowerPoint tienen que estar en la misma red.
-- En la tablet o el celular, alargá el tiempo de apagado de pantalla.
-- Las vistas de animación se preparan en segundo plano unos segundos después de abrir la presentación.
-  Se muestran las animaciones de entrada y salida; las de énfasis o movimiento no cambian la vista previa.
-- Si editás diapositivas con la presentación abierta, tocá “Actualizar vistas previas” en el panel.
-- Registro de errores: `%LOCALAPPDATA%\PPTRemoto\registro.txt`.
+## Good to know
 
-## Opciones (variables de entorno)
+- The devices and the PowerPoint computer must be on the same network.
+- On the tablet or phone, increase the screen timeout.
+- Animation previews are prepared in the background a few seconds after the presentation opens.
+  Entrance and exit animations are shown; emphasis and motion-path animations don't change the preview.
+- If you edit slides while the presentation is open, click “Actualizar vistas previas” (refresh previews) in the panel.
+- Error log: `%LOCALAPPDATA%\PPTRemoto\registro.txt`.
 
-- `PPT_REMOTO_PIN=1234` fija el PIN (si no, cambia cada vez que se abre el programa).
-- `PPT_REMOTO_PUERTO=8000` cambia el puerto.
+## Options (environment variables)
 
-## Desarrollo
+- `PPT_REMOTO_PIN=1234` sets a fixed PIN (otherwise it changes every time the program starts).
+- `PPT_REMOTO_PUERTO=8000` changes the port.
+
+## Development
 
 ```
 pip install -r requirements.txt
@@ -59,13 +61,13 @@ python ppt_remote.py
 construir.bat        → dist\PPTRemoto.exe
 ```
 
-Cada push a GitHub construye `PPTRemoto.exe` en Actions. Para publicar una versión nueva en Releases:
+Every push to GitHub builds `PPTRemoto.exe` in Actions. To publish a new version to Releases:
 
 ```
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-## Licencia
+## License
 
 [MIT](LICENSE)
