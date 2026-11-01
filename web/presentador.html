@@ -196,7 +196,7 @@ if (params.get("pin")) { guardar("pin", params.get("pin")); history.replaceState
 let pin = leer("pin") || "";
 
 let ws, estado = null, reintento = 0;
-let inicioPredica = Number(leer("inicioPredica")) || 0;
+let inicioPresentacion = Number(leer("inicioPresentacion")) || 0;
 
 function conectar() {
   ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?pin=${encodeURIComponent(pin)}`);
@@ -249,8 +249,8 @@ function pintar() {
   else if (e.presentando) { pastilla.textContent = "En vivo"; pastilla.className = "pastilla vivo"; }
   else { pastilla.textContent = "No está presentando"; pastilla.className = "pastilla"; }
 
-  // Arranca el cronómetro la primera vez que la presentación sale en vivo (o si quedó de otro culto)
-  if (e?.presentando && (!inicioPredica || Date.now() - inicioPredica > 6 * 3600 * 1000)) { inicioPredica = Date.now(); guardar("inicioPredica", inicioPredica); }
+  // Arranca el cronómetro la primera vez que la presentación sale en vivo (o si quedó de otra presentación)
+  if (e?.presentando && (!inicioPresentacion || Date.now() - inicioPresentacion > 6 * 3600 * 1000)) { inicioPresentacion = Date.now(); guardar("inicioPresentacion", inicioPresentacion); }
 
   // Diapositiva actual (antes de presentar se muestra la primera)
   const total = deck ? deck.diapos.length : 0;
@@ -335,10 +335,10 @@ function pintarChat() {
   cont.innerHTML = "";
   for (const m of lista) {
     const b = document.createElement("div");
-    b.className = "burbuja" + (m.de === "pastor" ? " mio" : "");
+    b.className = "burbuja" + (m.de === "presentador" ? " mio" : "");
     b.textContent = m.texto;
     const pie = document.createElement("small");
-    pie.textContent = m.hora + (m.de === "pastor" && m.visto ? " · visto" : "");
+    pie.textContent = m.hora + (m.de === "presentador" && m.visto ? " · visto" : "");
     b.appendChild(pie);
     cont.appendChild(b);
   }
@@ -424,7 +424,7 @@ $("b-negro").onclick = () => enviar("negro");
 $("b-grilla").onclick = abrirGrilla;
 $("b-cerrar").onclick = cerrarGrilla;
 
-// Teclado (laptops y presentadores/clickers conectados a la laptop del pastor)
+// Teclado (laptops y clickers conectados a la laptop del presentador)
 document.addEventListener("keydown", (ev) => {
   if (ev.target.tagName === "INPUT") return;
   if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(ev.key)) { enviar("siguiente"); ev.preventDefault(); }
@@ -461,11 +461,11 @@ const dosDigitos = (n) => String(n).padStart(2, "0");
 function tic() {
   const ahora = new Date();
   $("reloj").textContent = `${dosDigitos(ahora.getHours())}:${dosDigitos(ahora.getMinutes())}`;
-  const seg = inicioPredica ? Math.floor((Date.now() - inicioPredica) / 1000) : 0;
+  const seg = inicioPresentacion ? Math.floor((Date.now() - inicioPresentacion) / 1000) : 0;
   const h = Math.floor(seg / 3600), m = Math.floor(seg / 60) % 60, s = seg % 60;
   $("cronometro").textContent = h ? `${h}:${dosDigitos(m)}:${dosDigitos(s)}` : `${dosDigitos(m)}:${dosDigitos(s)}`;
 }
-$("cronometro").onclick = () => { inicioPredica = Date.now(); guardar("inicioPredica", inicioPredica); tic(); };
+$("cronometro").onclick = () => { inicioPresentacion = Date.now(); guardar("inicioPresentacion", inicioPresentacion); tic(); };
 setInterval(tic, 1000); tic();
 
 conectar();

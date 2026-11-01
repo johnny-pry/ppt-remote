@@ -52,7 +52,7 @@
 
   <section class="tarjeta" style="display:grid; gap:18px">
     <label class="interruptor">
-      <span>Control del pastor</span>
+      <span>Control del presentador</span>
       <input type="checkbox" id="control" checked>
     </label>
     <dl>
@@ -72,7 +72,7 @@
   </section>
 
   <section class="tarjeta" id="chat">
-    <h2>Mensajes al pastor</h2>
+    <h2>Mensajes al presentador</h2>
     <div id="chat-lista"></div>
     <form id="chat-form"><input id="chat-input" maxlength="300" autocomplete="off" placeholder="Mensaje"><button class="boton" type="submit">Enviar</button></form>
   </section>
@@ -113,11 +113,11 @@ function pintar() {
   pintarChat();
 }
 
-// Sin sonido a propósito: el audio de esta laptop suele ir a los parlantes del templo.
+// Sin sonido a propósito: el audio de esta laptop suele ir a los parlantes de la sala.
 function pintarChat() {
   const lista = estado?.mensajes ?? [];
-  const sinVer = lista.filter((m) => m.de === "pastor" && !m.visto).length;
-  document.title = sinVer ? `(${sinVer}) Mensaje del pastor` : "PPT Remoto · Operador";
+  const sinVer = lista.filter((m) => m.de === "presentador" && !m.visto).length;
+  document.title = sinVer ? `(${sinVer}) Mensaje del presentador` : "PPT Remoto · Operador";
   if (sinVer && document.visibilityState === "visible" && document.hasFocus()) setTimeout(() => enviar({ orden: "visto" }), 1500);
 
   const clave = JSON.stringify(lista);
@@ -127,10 +127,10 @@ function pintarChat() {
   cont.innerHTML = "";
   for (const m of lista) {
     const b = document.createElement("div");
-    b.className = "burbuja" + (m.de === "operador" ? " mio" : "") + (m.de === "pastor" && !m.visto ? " nuevo" : "");
+    b.className = "burbuja" + (m.de === "operador" ? " mio" : "") + (m.de === "presentador" && !m.visto ? " nuevo" : "");
     b.textContent = m.texto;
     const pie = document.createElement("small");
-    pie.textContent = m.hora + (m.de === "operador" ? (m.visto ? " · visto ✓" : " · enviado") : " · pastor");
+    pie.textContent = m.hora + (m.de === "operador" ? (m.visto ? " · visto ✓" : " · enviado") : " · presentador");
     b.appendChild(pie);
     cont.appendChild(b);
   }

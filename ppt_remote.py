@@ -1,10 +1,10 @@
 """
-PPT Remoto — el predicador sigue y controla el PowerPoint desde su tablet o laptop.
+PPT Remoto — quien presenta sigue y controla el PowerPoint desde una tablet, celular o laptop.
 
 Se ejecuta en la laptop del PowerPoint (Windows + Microsoft PowerPoint):
     python ppt_remote.py        (o PPTRemoto.exe)
 
-- Página del predicador:  http://<ip-de-la-laptop>:8000/
+- Página del presentador: http://<ip-de-la-laptop>:8000/
 - Panel del operador:     http://localhost:8000/operador   (solo desde la misma laptop)
 
 Corre sin ventana: queda un ícono en la bandeja de Windows (junto al reloj) para abrir el panel o salir.
@@ -333,7 +333,7 @@ class PowerPoint(threading.Thread):
 app = FastAPI()
 clientes: dict[WebSocket, dict] = {}
 config = {"control_remoto": True}
-mensajes: list[dict] = []   # chat operador ↔ pastor (solo en memoria)
+mensajes: list[dict] = []   # chat operador ↔ presentador (solo en memoria)
 MAX_MENSAJES, MAX_LARGO = 50, 300
 firewall_ok = True
 bucle: asyncio.AbstractEventLoop | None = None
@@ -378,8 +378,8 @@ async def inicio():
 
 
 @app.get("/")
-async def predicador():
-    return pagina("predicador.html")
+async def presentador():
+    return pagina("presentador.html")
 
 
 @app.get("/operador")
@@ -436,13 +436,13 @@ async def ws(websocket: WebSocket):
                 texto = str(msg.get("texto", "")).strip()[:MAX_LARGO]
                 if texto:
                     mensajes.append({"id": (mensajes[-1]["id"] + 1) if mensajes else 1,
-                                     "de": "operador" if info["operador"] else "pastor",
+                                     "de": "operador" if info["operador"] else "presentador",
                                      "texto": texto, "hora": time.strftime("%H:%M"), "visto": False})
                     del mensajes[:-MAX_MENSAJES]
                     await difundir()
             elif orden == "visto" and info["pin_ok"]:
                 # El que recibe marca como vistos los mensajes del otro lado
-                de_quien = "pastor" if info["operador"] else "operador"
+                de_quien = "presentador" if info["operador"] else "operador"
                 for m in mensajes:
                     if m["de"] == de_quien:
                         m["visto"] = True
